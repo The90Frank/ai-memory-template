@@ -1,0 +1,25 @@
+#!/bin/sh
+# Blocks pushes to main.
+#
+# Complement to pre-commit: without it, a commit made elsewhere could still
+# land on main through `git push origin <branch>:main`.
+# See ltm/feedback/machine-branches.md
+#
+# Deliberate override:  git push --no-verify
+#
+# stdin gets one line per ref:  <local ref> <local sha> <remote ref> <remote sha>
+
+while read -r local_ref local_sha remote_ref remote_sha
+do
+	case "$remote_ref" in
+		refs/heads/main)
+			printf '\n  push refused: main is blocked.\n\n' >&2
+			printf '  The common base is not updated from the workflow.\n' >&2
+			printf '  Push the branch of this machine instead.\n' >&2
+			printf '\n  Deliberate override: git push --no-verify\n\n' >&2
+			exit 1
+			;;
+	esac
+done
+
+exit 0
